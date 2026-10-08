@@ -1,13 +1,8 @@
-// ===============================================================
-//  Купеческие усадьбы Астрахани — фронтенд.
-//  Данные загружаются с /api/attractions.
-// ===============================================================
 const PANEL_WIDTH = 400;
 
-let attractions = [];        // заполняется из API
+let attractions = [];
 const markers = [];
 
-// ---------- Карта ----------
 const map = new maplibregl.Map({
     container: 'map',
     style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
@@ -18,7 +13,6 @@ const map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left');
 
-// ---------- Хелперы ----------
 const esc = (s) => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -38,7 +32,6 @@ function buildPanelBody(place) {
     `;
 }
 
-// ---------- Панель и галерея ----------
 const panel = document.getElementById('sidePanel');
 const panelBody = document.getElementById('panelBody');
 const panelClose = document.getElementById('panelClose');
@@ -91,7 +84,6 @@ function goToSlide(i) {
 galleryPrev.addEventListener('click', () => goToSlide(galleryIndex - 1));
 galleryNext.addEventListener('click', () => goToSlide(galleryIndex + 1));
 
-// ---------- Аудиоплеер ----------
 const audioPlayer      = document.getElementById('audioPlayer');
 const audioPlayBtn     = document.getElementById('audioPlayBtn');
 const audioTitle       = document.getElementById('audioTitle');
@@ -194,7 +186,6 @@ audioProgress.addEventListener('click', (e) => {
     audio.currentTime = ratio * audio.duration;
 });
 
-// ---------- Открытие / закрытие панели ----------
 function openPanel(place) {
     buildGallery(place.images?.length ? place.images : ['placeholder.png']);
     panelBody.innerHTML = buildPanelBody(place);
@@ -216,7 +207,6 @@ function closePanel() {
 panelClose.addEventListener('click', closePanel);
 panelBackdrop.addEventListener('click', closePanel);
 
-// ---------- Навигация ----------
 const tourPrev  = document.getElementById('tourPrev');
 const tourNext  = document.getElementById('tourNext');
 const tourInfo  = document.getElementById('tourInfo');
@@ -275,7 +265,6 @@ tourInfo.addEventListener('click', () => {
     else { openPanel(markers[currentIndex].place); panelOpen = true; }
 });
 
-// ---------- Клавиатура ----------
 document.addEventListener('keydown', (e) => {
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return;
@@ -286,9 +275,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); next(); }
 });
 
-// ===============================================================
-//  Инициализация: загружаем данные, ставим маркеры
-// ===============================================================
 async function init() {
     try {
         const resp = await fetch('/api/attractions');
@@ -330,17 +316,14 @@ async function init() {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
 
-            // В режиме «свой маршрут» клик по маркеру = добавить точку в маршрут
             if (routeState.mode === 'custom') {
                 addWaypoint(place.coords, place.name);
                 return;
             }
-            // В остальных случаях — открываем карточку
             goTo(index, { fly: true, open: true });
         });
     });
 
-    // Первая запись в навигации
     if (attractions.length > 0) {
         tourCounter.textContent = `1 / ${attractions.length}`;
         tourName.textContent = attractions[0].name;
@@ -350,30 +333,20 @@ async function init() {
 }
 
 map.on('load', init);
-// ===============================================================
-//  МАРШРУТЫ
-// ===============================================================
-
-// FOSSGIS-сервер поддерживает foot / bike / car.
-// Если нужен только автомобильный — можно заменить на
-// 'https://router.project-osrm.org/route/v1'
 const ROUTE_PROFILE = 'foot';
 const OSRM_BASE = `https://routing.openstreetmap.de/routed-${ROUTE_PROFILE}/route/v1/${ROUTE_PROFILE}`;
 
-// Рекомендуемый порядок обхода — от северных усадеб к южным,
-// вдоль Красной Набережной. Задаётся индексами в attractions.
 const RECOMMENDED_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 const routeState = {
-    mode: 'off',           // 'off' | 'recommended' | 'custom'
-    waypoints: [],         // массив [lng, lat]
-    labels: [],            // подписи для тултипов (или null)
-    markers: [],           // MapLibre-маркеры нумерации
+    mode: 'off',      
+    waypoints: [],       
+    labels: [],         
+    markers: [],      
     layersReady: false,
-    requestId: 0           // защита от гонки запросов
+    requestId: 0
 };
 
-// ---------- Элементы UI ----------
 const routePanel    = document.getElementById('routePanel');
 const routeHint     = document.getElementById('routeHint');
 const routeActions  = document.getElementById('routeActions');
@@ -384,7 +357,6 @@ const routeUndo     = document.getElementById('routeUndo');
 const routeClear    = document.getElementById('routeClear');
 const modeButtons   = [...document.querySelectorAll('.route-mode-btn')];
 
-// ---------- Инициализация source/layers ----------
 function ensureRouteLayers() {
     if (routeState.layersReady) return;
 
@@ -415,7 +387,6 @@ function ensureRouteLayers() {
     routeState.layersReady = true;
 }
 
-// ---------- Запрос к OSRM ----------
 async function fetchRoute(waypoints) {
     if (waypoints.length < 2) return null;
     const coords = waypoints.map(w => `${w[0]},${w[1]}`).join(';');
@@ -427,7 +398,6 @@ async function fetchRoute(waypoints) {
     return data.routes[0];
 }
 
-// ---------- Отрисовка линии ----------
 function drawRoute(geometry) {
     ensureRouteLayers();
     const feature = geometry
@@ -439,7 +409,6 @@ function drawRoute(geometry) {
     });
 }
 
-// ---------- Маркеры-номера ----------
 function clearWaypointMarkers() {
     routeState.markers.forEach(m => m.remove());
     routeState.markers = [];
@@ -450,7 +419,6 @@ function addWaypointMarker(coord, index, label) {
     el.className = 'route-waypoint';
     el.textContent = String(index + 1);
 
-    // Подсказка при наведении
     el.title = label
         ? `${label} — клик, чтобы удалить точку`
         : 'Клик, чтобы удалить точку';
@@ -459,8 +427,6 @@ function addWaypointMarker(coord, index, label) {
         .setLngLat(coord)
         .addTo(map);
 
-    // Не даём клику/тапу дойти до карты,
-    // иначе в режиме «Свой» добавится ещё одна точка
     ['mousedown', 'touchstart', 'pointerdown'].forEach(evt =>
         el.addEventListener(evt, (e) => e.stopPropagation())
     );
@@ -484,15 +450,12 @@ function removeWaypointAt(index) {
     rebuildRoute();
 }
 
-// ---------- Центральный метод: пересобрать маршрут ----------
 async function rebuildRoute({ fit = false } = {}) {
     const myId = ++routeState.requestId;
 
-    // 1. Маркеры нумерации
     clearWaypointMarkers();
     routeState.waypoints.forEach((wp, i) => addWaypointMarker(wp, i, routeState.labels[i]));
 
-    // 2. Сама линия
     if (routeState.waypoints.length < 2) {
         drawRoute(null);
         routeInfo.hidden = true;
@@ -501,7 +464,7 @@ async function rebuildRoute({ fit = false } = {}) {
 
     try {
         const route = await fetchRoute(routeState.waypoints);
-        if (myId !== routeState.requestId) return; // устаревший ответ
+        if (myId !== routeState.requestId) return; 
         if (!route) return;
 
         drawRoute(route.geometry);
@@ -528,7 +491,6 @@ async function rebuildRoute({ fit = false } = {}) {
     }
 }
 
-// ---------- Добавить точку (режим «свой») ----------
 function addWaypoint(coord, label = null) {
     routeState.waypoints.push(coord);
     routeState.labels.push(label);
@@ -536,11 +498,10 @@ function addWaypoint(coord, label = null) {
     rebuildRoute();
 }
 
-// ---------- Очистить маршрут ----------
 function clearRoute() {
     routeState.waypoints = [];
     routeState.labels = [];
-    routeState.requestId++;      // инвалидируем возможные запросы
+    routeState.requestId++;     
     clearWaypointMarkers();
     drawRoute(null);
     routeInfo.hidden = true;
@@ -551,11 +512,9 @@ function updateUndoState() {
     routeUndo.disabled = routeState.waypoints.length === 0;
 }
 
-// ---------- Переключение режима ----------
 function setMode(mode) {
     if (routeState.mode === mode) return;
 
-    // Выходим из предыдущего режима
     clearRoute();
     routeState.mode = mode;
 
@@ -567,7 +526,7 @@ function setMode(mode) {
         routeState.waypoints = RECOMMENDED_ORDER.map(i => attractions[i].coords);
         routeState.labels = RECOMMENDED_ORDER.map(i => attractions[i].name);
         routeHint.hidden = true;
-        routeActions.hidden = false;           // ← было true
+        routeActions.hidden = false;          
         updateUndoState();
         rebuildRoute({ fit: true });
     } else if (mode === 'custom') {
@@ -577,11 +536,9 @@ function setMode(mode) {
     }
 }
 
-// ---------- Обработчики UI ----------
 modeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
-        // Повторный клик по активной кнопке — выключить режим
         setMode(routeState.mode === mode ? 'off' : mode);
     });
 });
@@ -595,10 +552,8 @@ routeUndo.addEventListener('click', () => {
 
 routeClear.addEventListener('click', clearRoute);
 
-// ---------- Клик по карте: добавить точку в «своём» режиме ----------
 map.on('click', (e) => {
     if (routeState.mode !== 'custom') return;
-    // Игнорируем клики по существующим маркерам (они сами вызовут addWaypoint)
     addWaypoint([e.lngLat.lng, e.lngLat.lat]);
 });
 map.on('error', (e) => console.error('Ошибка MapLibre:', e.error));
