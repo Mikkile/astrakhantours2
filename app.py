@@ -1,19 +1,8 @@
-"""
-Сайт «Купеческие усадьбы Астрахани».
-Flask-бэкенд: хранит данные и отдаёт их фронтенду через REST API.
-"""
 from flask import Flask, render_template, jsonify, send_from_directory
 import os
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-
-# =====================================================================
-#  ДАННЫЕ ОБ УСАДЬБАХ
-#  coords  — [широта, долгота]
-#  images  — имена файлов из static/src/
-#  audio   — имя аудиофайла из static/src/ (или None)
-# =====================================================================
 ATTRACTIONS = [
     {
         "id": 0,
@@ -316,25 +305,18 @@ ATTRACTIONS = [
     },
 ]
 
-
-# =====================================================================
-#  МАРШРУТЫ
-# =====================================================================
 @app.route("/")
 def index():
-    """Главная страница — карта с усадьбами."""
     return render_template("index.html")
 
 
 @app.route("/api/attractions")
 def api_attractions():
-    """JSON-API со списком всех усадеб."""
     return jsonify(ATTRACTIONS)
 
 
 @app.route("/api/attractions/<int:place_id>")
 def api_attraction(place_id: int):
-    """Одна усадьба по id."""
     if 0 <= place_id < len(ATTRACTIONS):
         return jsonify(ATTRACTIONS[place_id])
     return jsonify({"error": "not found"}), 404
