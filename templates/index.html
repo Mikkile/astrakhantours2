@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Купеческие усадьбы Астрахани</title>
+    <link rel="icon" href="data:,">
+    <link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="route-panel" id="routePanel">
+    <div class="route-modes">
+        <button class="route-mode-btn" data-mode="recommended">
+            <span class="route-mode-icon">🗺️</span>
+            <span>Рекомендуемый</span>
+        </button>
+        <button class="route-mode-btn" data-mode="custom">
+            <span class="route-mode-icon">✏️</span>
+            <span>Свой маршрут</span>
+        </button>
+    </div>
+
+    <div class="route-hint" id="routeHint" hidden>
+    Кликните по карте или по маркеру усадьбы, чтобы добавить точку.<br>
+    Кликните по номеру точки, чтобы её удалить.
+</div>
+
+    <div class="route-actions" id="routeActions" hidden>
+        <button id="routeUndo" title="Убрать последнюю точку">↶ Отменить</button>
+        <button id="routeClear" title="Очистить маршрут">✕ Очистить</button>
+    </div>
+
+    <div class="route-info" id="routeInfo" hidden>
+        <span id="routeDistance">—</span>
+        <span class="route-info-sep">·</span>
+        <span id="routeDuration">—</span>
+    </div>
+</div>
+
+<div class="panel-backdrop" id="panelBackdrop"></div>
+
+<aside class="side-panel" id="sidePanel" aria-hidden="true">
+    <button class="panel-close" id="panelClose" aria-label="Закрыть">×</button>
+    <div class="gallery" id="gallery">
+        <div class="gallery-track" id="galleryTrack"></div>
+        <button class="gallery-btn prev" id="galleryPrev" aria-label="Предыдущее фото">‹</button>
+        <button class="gallery-btn next" id="galleryNext" aria-label="Следующее фото">›</button>
+        <div class="gallery-dots" id="galleryDots"></div>
+    </div>
+
+    <div class="audio-player" id="audioPlayer">
+        <button class="audio-btn" id="audioPlayBtn" aria-label="Воспроизвести"></button>
+        <div class="audio-info">
+            <div class="audio-title" id="audioTitle">Аудиорассказ</div>
+            <div class="audio-progress" id="audioProgress">
+                <div class="audio-progress-bar" id="audioProgressBar"></div>
+            </div>
+        </div>
+        <div class="audio-time" id="audioTime">0:00</div>
+    </div>
+
+    <div class="panel-body" id="panelBody"></div>
+</aside>
+
+<div class="tour-nav" id="tourNav" role="group" aria-label="Навигация по усадьбам">
+    <button id="tourPrev" title="Предыдущая (←)" aria-label="Предыдущая">‹</button>
+    <div class="tour-info" id="tourInfo" title="Открыть карточку">
+        <span class="tour-counter" id="tourCounter">— / —</span>
+        <span class="tour-name" id="tourName">Загрузка…</span>
+    </div>
+    <button id="tourNext" title="Следующая (→)" aria-label="Следующая">›</button>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+
+</body>
+</html>
